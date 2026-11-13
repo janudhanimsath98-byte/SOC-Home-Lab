@@ -1,0 +1,55 @@
+! SW2 — adapt interface names and access-port assignments to your model.
+enable
+configure terminal
+hostname SW2
+no ip domain-lookup
+
+vlan 10
+ name Staff
+vlan 20
+ name Finance
+vlan 30
+ name Services
+vlan 99
+ name Management
+
+interface gigabitEthernet0/1
+ description 802.1Q trunk to SW1 G0/2
+ switchport mode trunk
+ switchport trunk allowed vlan 10,20,30,99
+ no shutdown
+exit
+
+interface range fastEthernet0/1-2
+ description Finance endpoints
+ switchport mode access
+ switchport access vlan 20
+ spanning-tree portfast
+exit
+
+interface vlan 99
+ description Switch management address
+ ip address 192.168.99.3 255.255.255.0
+ no shutdown
+exit
+ip default-gateway 192.168.99.1
+
+ip domain-name lab.invalid
+username labadmin privilege 15 secret CHANGE-THIS-IN-PACKET-TRACER
+crypto key generate rsa modulus 1024
+ip ssh version 2
+ip access-list standard MGMT-SSH
+ permit host 192.168.99.10
+ deny any
+exit
+line vty 0 15
+ login local
+ transport input ssh
+ access-class MGMT-SSH in
+exit
+
+end
+show vlan brief
+show interfaces trunk
+show ip interface brief
+! Save after verifying: copy running-config startup-config
